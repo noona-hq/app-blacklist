@@ -16,3 +16,10 @@ deployment:
   environment:
     PORT: 8080
     DB_NAME: app_blacklist
+    DB_DIRECTCONNECTION: false
+    NOONA_BASEURL: ""
+    NOONA_APPSTOREURL: ""
+    NOONA_CLIENTID: ""
+    NOONA_CLIENTSECRET: ""
+    NOONA_BLACKLISTBASEURL: ""
+    NOONA_BLACKLISTWEBHOOKTOKEN: ""
