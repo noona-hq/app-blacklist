@@ -1,0 +1,71 @@
+{{- if .Values.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: {{ template "app.name" . }}
+    app.kubernetes.io/part-of: noona
+  name: {{ template "app.name" . }}
+spec:
+  progressDeadlineSeconds: 600
+  {{- if .Values.deployment.replicaCount }}
+  replicas: {{ .Values.deployment.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      app: {{ template "app.name" . }}
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: {{ template "app.name" . }}
+        app.kubernetes.io/part-of: noona
+    spec:
+      containers:
+        - image: "{{ .Values.deployment.image.repository }}:{{ .Values.deployment.image.tag }}"
+          name: {{ template "app.name" . }}
+          ports:
+            - containerPort: {{ .Values.deployment.environment.PORT }}
+          volumeMounts:
+          - name: noona-deployment-files
+            mountPath: /etc/secrets
+            readOnly: true
+          env:
+            {{- range $k, $v := .Values.deployment.environment }}
+            - name: {{ $k }}
+              value: {{ $v | quote }}
+            {{- end }}
+            - name: DB_CONNECTION
+              valueFrom:
+                secretKeyRef:
+                  name: noona-deployment-db
+                  key: DB_CONN
+          resources:
+            limits:
+              cpu: {{ .Values.deployment.resources.limits.cpu }}
+              memory: {{ .Values.deployment.resources.limits.memory }}
+            requests:
+              cpu: {{ .Values.deployment.resources.requests.cpu }}
+              memory: {{ .Values.deployment.resources.requests.memory }}
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: {{ .Values.deployment.environment.PORT }}
+            initialDelaySeconds: 60
+            periodSeconds: 15
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: {{ .Values.deployment.environment.PORT }}
+          securityContext:
+            allowPrivilegeEscalation: false
+      volumes:
+      - name: noona-deployment-files
+        secret:
+          secretName: noona-deployment-files
+          optional: true
+{{- end }}

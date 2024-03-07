@@ -1,0 +1,18 @@
+{{- if .Values.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: {{ template "app.name" . }}
+    app.kubernetes.io/part-of: noona
+  name: {{ template "app.name" . }}
+spec:
+  ports:
+  - name: http
+    port: {{ .Values.deployment.environment.PORT }}
+    protocol: TCP
+    targetPort: {{ .Values.deployment.environment.PORT }}
+  selector:
+    app: {{ template "app.name" . }}
+  type: NodePort
+{{- end }}

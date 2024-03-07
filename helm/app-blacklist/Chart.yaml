@@ -1,0 +1,5 @@
+apiVersion: v2
+type: application
+name: app-blacklist
+description: Blacklist app for the Noona App Store
+version: 1.0.0-latest

@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Blacklist</title>
+    <link
+      rel="icon"
+      type="image/png"
+      href="https://res.cloudinary.com/timatal-ehf/image/upload/t_blacklistIcon/hu3lhhmsty8yvqvdnvs4.jpg"
+    />
+
+    <style>
+      :root {
+        --Black-4: #393939; /* Assuming this color for --Black-4, you can change it as needed */
+        --Dark-Grey: #333; /* Dark grey for the button */
+      }
+
+      body {
+        background: #f5f5f5; /* Light grey background */
+        color: black;
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+      .container {
+        text-align: center;
+        max-width: 600px;
+        padding: 20px;
+        background: white; /* White background for content box */
+        border-radius: 15px; /* Rounded corners for the content box */
+        box-shadow: 0 10px 10px rgba(0, 0, 0, 0.2); /* Adding some shadow for floating effect */
+        margin: 50px; /* Adds some space around the container */
+      }
+      img.logo {
+        max-width: 30%; /* Smaller logo */
+        height: auto;
+        border-radius: 15%; /* Rounded corners for the logo */
+      }
+      img.example {
+        max-width: 50%; /* Smaller logo */
+        height: auto;
+        border-radius: 5%; /* Rounded corners for the logo */
+      }
+      .description {
+        color: var(--Black-4);
+        font-size: 1rem;
+        font-style: normal;
+        letter-spacing: -0.0105rem;
+        font-weight: 400;
+        line-height: 130%;
+        text-align: center; /* Center-align text */
+        margin: 0 auto; /* Ensure margins are auto to center-align the block itself if needed */
+      }
+
+      hr {
+        width: 80%; /* Width of the horizontal line */
+        border: none;
+        height: 1px;
+        background-color: var(--Black-4); /* Color of the line */
+        margin: 20px auto; /* Center the line and add vertical spacing */
+      }
+      .back-button {
+        background-color: var(
+          --Dark-Grey
+        ); /* Dark grey background for the button */
+        color: white; /* White text color */
+        border: none;
+        padding: 10px 20px;
+        border-radius: 5px; /* Slightly rounded corners for the button */
+        font-size: 1rem;
+        cursor: pointer; /* Change cursor to pointer when hovering over the button */
+        text-decoration: none; /* Remove underline from the text */
+        display: inline-block; /* Align button properly */
+        margin: 20px 0; /* Add some space above and below the button */
+      }
+      h1,
+      h2,
+      h3 {
+        color: #444444; /* Adjust the color code to get the desired shade of grey */
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <img
+        src="https://res.cloudinary.com/timatal-ehf/image/upload/v1709583398/hu3lhhmsty8yvqvdnvs4.webp"
+        alt="Logo"
+        class="logo"
+      />
+      <hr />
+      <h2>Blacklist</h2>
+      <p class="description">
+        Blacklist app enabled for <b>{{.CompanyName}}</b>
+      </p>
+      <br />
+      <p class="description">
+        There is now a customer group called
+        <b>Blacklist</b> that triggers the blacklist functionality.
+      </p>
+      <br />
+      <br />
+      <h2>How it works</h2>
+      <p class="description">
+        All bookings from customers in the <b>Blacklist</b> group will be
+        automatically declined.
+      </p>
+      <br />
+      <br />
+      <br />
+      <img
+        src="https://res.cloudinary.com/timatal-ehf/image/upload/v1709824994/tcpfmcrydovcyucwwnrb.png"
+        alt="Logo"
+        class="example"
+      />
+      <br />
+      <br />
+      <br />
+      <br />
+      <p class="description">
+        We will also notify you when the blacklist is triggered.
+      </p>
+      <br />
+      <img
+        src="https://res.cloudinary.com/timatal-ehf/image/upload/v1709824994/zhekhhxrycsfyvzcle1v.png"
+        alt="Logo"
+        class="example"
+      />
+      <br />
+      <br />
+      <br />
+      <hr />
+      <!-- Back to Noona button -->
+      <button
+        class="back-button"
+        onclick="window.location.href='{{.AppStoreURL}}';"
+      >
+        Back to Noona
+      </button>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,90 @@
+version: 2.1
+
+workflows:
+  deploy-dev:
+    jobs:
+      - docker-image:
+          context:
+            - noona-dev
+          filters:
+            branches:
+              only:
+                - dev
+      - helm-chart:
+          context:
+            - noona-dev
+          requires:
+            - docker-image
+          filters:
+            branches:
+              only:
+                - dev
+
+  deploy:
+    jobs:
+      - docker-image:
+          context:
+            - noona
+          filters:
+            branches:
+              only:
+                - main
+                - master
+      - helm-chart:
+          context:
+            - noona
+          requires:
+            - docker-image
+          filters:
+            branches:
+              only:
+                - main
+                - master
+
+jobs:
+  docker-image:
+    docker:
+      - image: google/cloud-sdk:alpine
+    steps:
+      - checkout
+      - setup_remote_docker:
+          version: default
+          docker_layer_caching: true
+      - run:
+          name: Add Deps
+          command: apk add make
+      - run:
+          name: Docker Login
+          command: |
+            echo $GCLOUD_SERVICE_KEY > gcloud-service-key.json
+            cat gcloud-service-key.json | docker login -u _json_key --password-stdin https://gcr.io
+      - run:
+          name: Build Docker Image
+          command: make ci-build-image
+      - run:
+          name: Push Docker Image
+          command: make ci-push-image
+  helm-chart:
+    docker:
+      - image: alpine/helm:3.5.3
+    environment:
+      HELM_EXPERIMENTAL_OCI: 1
+    steps:
+      - checkout
+      - run:
+          name: Add Deps
+          command: apk add make bash git curl
+      - run:
+          name: Helm Registry Login
+          command: |
+            echo $GCLOUD_SERVICE_KEY > gcloud-service-key.json
+            cat gcloud-service-key.json | helm registry login -u _json_key --password-stdin https://europe-docker.pkg.dev
+      - run:
+          name: Build Chart
+          command: make ci-build-chart
+      - run:
+          name: Deploy Chart
+          command: make ci-push-chart
+      - run:
+          name: Sync Noona Deployment
+          command: make ci-noona-sync
