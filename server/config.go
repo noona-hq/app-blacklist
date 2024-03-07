@@ -10,4 +10,6 @@ type Config struct {
 	Noona  noona.Config
 	Logger logger.Config
 	DB     db.Config
+	// Store can either be memory or mongodb
+	Store string `default:"mongodb"`
 }

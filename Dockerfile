@@ -14,7 +14,7 @@ RUN make install
 
 
 FROM alpine:latest
-COPY --from=build /go/bin/app-blacklist ./
+COPY --from=build /go/bin/blacklist ./
 COPY --from=build /build/server/templates/html ./server/templates/html
 
 ENTRYPOINT ["./blacklist"]

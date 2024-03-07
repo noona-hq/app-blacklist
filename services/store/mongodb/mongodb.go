@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/dchest/uniuri"
 	"github.com/noona-hq/blacklist/db"
 	"github.com/noona-hq/blacklist/services/store"
 	"github.com/noona-hq/blacklist/services/store/entity"
@@ -68,4 +69,8 @@ func filter() bson.M {
 	filter := bson.M{"deletedAt": bson.M{"$exists": false}}
 
 	return filter
+}
+
+func randomID() string {
+	return uniuri.NewLen(24)
 }
