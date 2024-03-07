@@ -21,6 +21,6 @@ the appointment is automatically declined.
 
 ### Use case
 
-Users sometimes encounter individuals that could be labelled a "Bad Client". They frequently don't show up, they don't pay, they spam appointment requests without intending to ever show up etc.
+Users sometimes encounter individuals that could be labelled a "Bad Client". They frequently don't show up, they don't pay, spam appointment requests without intending to ever show up etc.
 
 The user can now simply add this customer to the **Blacklist** customer group and they will be freed from future nuisance.
