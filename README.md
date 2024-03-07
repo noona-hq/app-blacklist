@@ -1,3 +1,5 @@
+![Example Image](blacklist.webp)
+
 # Blacklist App
 
 Noona HQ example app that adds blacklisting functionality.
