@@ -1,0 +1,16 @@
+{{- if .Values.enabled }}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ template "app.name" . }}
+  labels:
+    app.kubernetes.io/part-of: noona
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: {{ template "app.name" . }}
+subjects:
+- kind: ServiceAccount
+  name: {{ template "app.name" . }}
+  namespace: {{ .Release.Namespace }}
+{{- end }}
