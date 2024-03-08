@@ -14,7 +14,7 @@ type SuccessScreenData struct {
 
 func (s Server) OAuthCallbackHandler(ctx echo.Context) error {
 	data := SuccessScreenData{
-		AppStoreURL: s.config.Noona.AooStoreURL,
+		AppStoreURL: s.config.Noona.AppStoreURL,
 		CompanyName: "company",
 	}
 
