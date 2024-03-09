@@ -7,15 +7,15 @@ import (
 	"github.com/chidiwilliams/flatbson"
 	"github.com/dchest/uniuri"
 	"github.com/noona-hq/blacklist/db"
-	"github.com/noona-hq/blacklist/services/store"
-	"github.com/noona-hq/blacklist/services/store/entity"
+	"github.com/noona-hq/blacklist/store"
+	"github.com/noona-hq/blacklist/store/entity"
 	"github.com/pkg/errors"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 const (
-	blacklistCollectionName = "blacklist"
+	usersCollectionName = "users"
 )
 
 type Store struct {
@@ -29,8 +29,8 @@ func NewStore(db db.Database) store.Store {
 	}
 }
 
-func (s Store) CreateBlacklistUser(user entity.User) error {
-	blacklistCollection := s.db.DB.Collection(blacklistCollectionName)
+func (s Store) CreateUser(user entity.User) error {
+	usersCollection := s.db.DB.Collection(usersCollectionName)
 
 	if user.ID == "" {
 		user.ID = randomID()
@@ -40,7 +40,7 @@ func (s Store) CreateBlacklistUser(user entity.User) error {
 	user.CreatedAt = now
 	user.UpdatedAt = now
 
-	_, err := blacklistCollection.InsertOne(context.Background(), user)
+	_, err := usersCollection.InsertOne(context.Background(), user)
 	if err != nil {
 		return err
 	}
@@ -48,8 +48,8 @@ func (s Store) CreateBlacklistUser(user entity.User) error {
 	return nil
 }
 
-func (s Store) UpdateBlacklistUser(id string, user entity.User) (entity.User, error) {
-	blacklistCollection := s.db.DB.Collection(blacklistCollectionName)
+func (s Store) UpdateUser(id string, user entity.User) (entity.User, error) {
+	usersCollection := s.db.DB.Collection(usersCollectionName)
 
 	user.UpdatedAt = time.Now()
 
@@ -64,16 +64,16 @@ func (s Store) UpdateBlacklistUser(id string, user entity.User) (entity.User, er
 
 	update := bson.M{"$set": userUpdate}
 
-	_, err = blacklistCollection.UpdateOne(context.Background(), filter, update)
+	_, err = usersCollection.UpdateOne(context.Background(), filter, update)
 	if err != nil {
 		return entity.User{}, err
 	}
 
-	return s.getBlacklistUser(id)
+	return s.getUser(id)
 }
 
-func (s Store) GetBlacklistUserForCompany(companyID string) (entity.User, error) {
-	blacklistCollection := s.db.DB.Collection(blacklistCollectionName)
+func (s Store) GetUserForCompany(companyID string) (entity.User, error) {
+	usersCollection := s.db.DB.Collection(usersCollectionName)
 
 	filter := filter()
 
@@ -83,7 +83,7 @@ func (s Store) GetBlacklistUserForCompany(companyID string) (entity.User, error)
 	sort := bson.M{"createdAt": -1}
 
 	var user entity.User
-	err := blacklistCollection.FindOne(context.Background(), filter, &options.FindOneOptions{Sort: sort}).Decode(&user)
+	err := usersCollection.FindOne(context.Background(), filter, &options.FindOneOptions{Sort: sort}).Decode(&user)
 	if err != nil {
 		return entity.User{}, err
 	}
@@ -91,15 +91,15 @@ func (s Store) GetBlacklistUserForCompany(companyID string) (entity.User, error)
 	return user, nil
 }
 
-func (s Store) getBlacklistUser(id string) (entity.User, error) {
-	blacklistCollection := s.db.DB.Collection(blacklistCollectionName)
+func (s Store) getUser(id string) (entity.User, error) {
+	usersCollection := s.db.DB.Collection(usersCollectionName)
 
 	filter := filter()
 
 	filter["_id"] = id
 
 	var user entity.User
-	err := blacklistCollection.FindOne(context.Background(), filter).Decode(&user)
+	err := usersCollection.FindOne(context.Background(), filter).Decode(&user)
 	if err != nil {
 		return entity.User{}, err
 	}

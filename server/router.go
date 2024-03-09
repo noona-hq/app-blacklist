@@ -17,7 +17,7 @@ func (s Server) checkBearerToken(next echo.HandlerFunc) echo.HandlerFunc {
 		// remove "Bearer " prefix
 		token := strings.TrimPrefix(auth, "Bearer ")
 
-		if token != s.config.Noona.BlacklistWebhookToken {
+		if token != s.config.Noona.AppWebhookToken {
 			return c.JSON(http.StatusUnauthorized, map[string]string{"error": "unauthorized"})
 		}
 

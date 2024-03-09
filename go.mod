@@ -7,7 +7,7 @@ require (
 	github.com/dchest/uniuri v1.2.0
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/labstack/echo/v4 v4.11.4
-	github.com/noona-hq/noona-sdk-go v0.0.0-20240307141345-db190b831a16
+	github.com/noona-hq/noona-sdk-go v0.0.0-20240309134956-70d1a175bd30
 	github.com/pkg/errors v0.9.1
 	go.mongodb.org/mongo-driver v1.14.0
 	go.uber.org/zap v1.27.0

@@ -1,70 +1,81 @@
 package core
 
 import (
+	"time"
+
 	"github.com/noona-hq/blacklist/logger"
 	"github.com/noona-hq/blacklist/services/noona"
-	"github.com/noona-hq/blacklist/services/store"
-	"github.com/noona-hq/blacklist/services/store/entity"
+	"github.com/noona-hq/blacklist/store"
+	"github.com/noona-hq/blacklist/store/entity"
 	noonasdk "github.com/noona-hq/noona-sdk-go"
 	"github.com/pkg/errors"
 )
 
 type Service struct {
-	logger logger.Logger
-	noona  noona.Service
-	store  store.Store
+	logger          logger.Logger
+	noona           noona.Service
+	store           store.Store
+	anonymousClient noona.AnonymousClient
 }
 
-func New(logger logger.Logger, noona noona.Service, store store.Store) Service {
-	return Service{logger, noona, store}
+func New(logger logger.Logger, noona noona.Service, store store.Store) (Service, error) {
+	anonymousClient, err := noona.AnonymousClient()
+	if err != nil {
+		return Service{}, errors.Wrap(err, "Error creating anonymous Noona client")
+	}
+
+	return Service{logger, noona, store, anonymousClient}, nil
 }
 
-func (s Service) OnboardUserToBlacklist(code string) (*noonasdk.User, error) {
-	s.logger.Infow("Onboarding user to blacklist")
+func (s Service) OnboardUser(code string) (*noonasdk.User, error) {
+	s.logger.Infow("Onboarding user to app")
 
-	noAuthClient, err := s.noona.NoAuthNoonaClient()
+	token, err := s.anonymousClient.CodeTokenExchange(code)
 	if err != nil {
-		return nil, errors.Wrap(err, "Error getting no auth noona client")
+		return nil, errors.Wrap(err, "error exchanging code for token")
 	}
 
-	token, err := noAuthClient.CodeTokenExchange(code)
+	client, err := s.noona.Client(*token)
 	if err != nil {
-		return nil, errors.Wrap(err, "Error exchanging code for token")
+		return nil, errors.Wrap(err, "error getting auth noona client")
 	}
 
-	authClient, err := s.noona.AuthNoonaClient(*token)
+	noonaUser, err := client.GetUser()
 	if err != nil {
-		return nil, errors.Wrap(err, "Error getting auth noona client")
+		return nil, errors.Wrap(err, "error getting user")
 	}
 
-	user, err := authClient.GetUser()
+	user, err := s.noonaUserAsUser(noonaUser, token)
 	if err != nil {
-		return nil, errors.Wrap(err, "Error getting user")
+		return nil, errors.Wrap(err, "error converting noona user to user")
 	}
 
-	blacklistUser, err := s.noonaUserAsBlacklistUser(user, token)
-	if err != nil {
-		return nil, errors.Wrap(err, "Error converting noona user to blacklist user")
+	if err := s.scaffoldNoonaResourcesForApp(client, user.CompanyID); err != nil {
+		return nil, errors.Wrap(err, "error scaffolding noona resources")
 	}
 
-	if err := authClient.SetupWebhook(blacklistUser.CompanyID); err != nil {
-		return nil, errors.Wrap(err, "Error setting up webhook")
+	if err := s.store.CreateUser(user); err != nil {
+		return nil, errors.Wrap(err, "error creating user")
 	}
 
-	if err := authClient.SetupBlacklistCustomerGroup(blacklistUser.CompanyID); err != nil {
-		return nil, errors.Wrap(err, "Error setting up blacklist customer group")
-	}
+	s.logger.Infow("User onboarded to app", "email", user.Email, "company_id", user.CompanyID)
 
-	if err := s.store.CreateBlacklistUser(blacklistUser); err != nil {
-		return nil, errors.Wrap(err, "Error creating blacklist user")
-	}
-
-	s.logger.Infow("User onboarded to blacklist", "email", blacklistUser.Email, "company_id", blacklistUser.CompanyID)
-
-	return user, nil
+	return noonaUser, nil
 }
 
-// ProcessWebhookCallback processes a webhook callback from Noona and enforces the blacklist
+func (s Service) scaffoldNoonaResourcesForApp(client noona.Client, companyID string) error {
+	if err := client.SetupWebhook(companyID); err != nil {
+		return errors.Wrap(err, "error setting up webhook")
+	}
+
+	if err := client.SetupBlacklistCustomerGroup(companyID); err != nil {
+		return errors.Wrap(err, "error setting up blacklist customer group")
+	}
+
+	return nil
+}
+
+// ProcessWebhookCallback processes a webhook callback from Noona
 // Returning an error will cause the webhook to be retried
 // Returning nil will acknowledge the webhook
 func (s Service) ProcessWebhookCallback(callback noonasdk.CallbackData) error {
@@ -86,15 +97,21 @@ func (s Service) ProcessWebhookCallback(callback noonasdk.CallbackData) error {
 		return nil
 	}
 
-	user, err := s.store.GetBlacklistUserForCompany(string(companyID))
+	user, err := s.store.GetUserForCompany(string(companyID))
 	if err != nil {
-		s.logger.Errorw("Error getting blacklist user for company", "event_id", *event.Id, "company_id", string(companyID), "error", err)
+		s.logger.Errorw("Error getting user for company", "event_id", *event.Id, "company_id", string(companyID), "error", err)
 		return nil
 	}
 
-	authClient, err := s.noona.AuthNoonaClientFromBlacklistUser(user)
+	oAuthToken, err := s.getOAuthTokenFromUser(user)
 	if err != nil {
-		s.logger.Errorw("Error getting auth noona client from blacklist user", "event_id", *event.Id, "error", err)
+		s.logger.Errorw("Error getting OAuth token from user", "event_id", *event.Id, "error", err)
+		return nil
+	}
+
+	authClient, err := s.noona.Client(oAuthToken)
+	if err != nil {
+		s.logger.Errorw("Error getting noona client", "event_id", *event.Id, "error", err)
 		return nil
 	}
 
@@ -119,7 +136,7 @@ func (s Service) ProcessWebhookCallback(callback noonasdk.CallbackData) error {
 	return nil
 }
 
-func (s Service) noonaUserAsBlacklistUser(user *noonasdk.User, token *noonasdk.OAuthToken) (entity.User, error) {
+func (s Service) noonaUserAsUser(user *noonasdk.User, token *noonasdk.OAuthToken) (entity.User, error) {
 	if user == nil || token == nil {
 		return entity.User{}, errors.New("user or token is nil")
 	}
@@ -142,4 +159,34 @@ func (s Service) noonaUserAsBlacklistUser(user *noonasdk.User, token *noonasdk.O
 			RefreshToken:         *token.RefreshToken,
 		},
 	}, nil
+}
+
+func (s Service) getOAuthTokenFromUser(user entity.User) (noonasdk.OAuthToken, error) {
+	oAuthToken := noonasdk.OAuthToken{
+		RefreshToken: &user.Token.RefreshToken,
+		AccessToken:  &user.Token.AccessToken,
+		ExpiresAt:    &user.Token.AccessTokenExpiresAt,
+	}
+
+	if oAuthToken.ExpiresAt.Before(time.Now().Add(time.Minute * 5)) {
+		token, err := s.anonymousClient.RefreshTokenExchange(user.Token.RefreshToken)
+		if err != nil {
+			return noonasdk.OAuthToken{}, errors.Wrap(err, "error refreshing token")
+		}
+
+		oAuthToken = noonasdk.OAuthToken{
+			RefreshToken: token.RefreshToken,
+			AccessToken:  token.AccessToken,
+			ExpiresAt:    token.ExpiresAt,
+		}
+
+		if _, err := s.store.UpdateUser(user.ID, entity.User{Token: entity.Token{
+			AccessToken:          *token.AccessToken,
+			AccessTokenExpiresAt: *token.ExpiresAt,
+		}}); err != nil {
+			s.logger.Errorw("Error updating user", "error", err)
+		}
+	}
+
+	return oAuthToken, nil
 }

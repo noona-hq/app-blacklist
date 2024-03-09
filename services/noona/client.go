@@ -14,12 +14,12 @@ const (
 	BlacklistCustomerGroupName = "Blacklist"
 )
 
-type AuthClient struct {
+type Client struct {
 	cfg    Config
 	Client *noona.ClientWithResponses
 }
 
-func (a AuthClient) GetUser() (*noona.User, error) {
+func (a Client) GetUser() (*noona.User, error) {
 	userResponse, err := a.Client.GetUserWithResponse(context.Background(), &noona.GetUserParams{
 		Expand: &noona.Expand{"companies"},
 	})
@@ -38,11 +38,11 @@ func (a AuthClient) GetUser() (*noona.User, error) {
 	return userResponse.JSON200, nil
 }
 
-func (a AuthClient) SetupWebhook(companyID string) error {
+func (a Client) SetupWebhook(companyID string) error {
 	webhook := noona.Webhook{
 		Title:       utils.StringPtr("Blacklist"),
 		Description: utils.StringPtr("Watches event creation to enforce blacklist app functioinality."),
-		CallbackUrl: utils.StringPtr(a.cfg.BlacklistBaseURL + "/webhook"),
+		CallbackUrl: utils.StringPtr(a.cfg.AppBaseURL + "/webhook"),
 		Company: func() *noona.ExpandableCompany {
 			company := noona.ExpandableCompany{}
 			company.FromID(noona.ID(companyID))
@@ -52,7 +52,7 @@ func (a AuthClient) SetupWebhook(companyID string) error {
 		Headers: &noona.WebhookHeaders{
 			{
 				Key:    utils.StringPtr("Authorization"),
-				Values: &[]string{"Bearer " + a.cfg.BlacklistWebhookToken},
+				Values: &[]string{"Bearer " + a.cfg.AppWebhookToken},
 			},
 		},
 		Events: &noona.WebhookEvents{
@@ -72,7 +72,7 @@ func (a AuthClient) SetupWebhook(companyID string) error {
 	return nil
 }
 
-func (a AuthClient) SetupBlacklistCustomerGroup(companyID string) error {
+func (a Client) SetupBlacklistCustomerGroup(companyID string) error {
 	existingGroups, err := a.Client.ListCustomerGroupsWithResponse(context.Background(), companyID, &noona.ListCustomerGroupsParams{})
 	if err != nil {
 		return errors.Wrap(err, "Error listing customer groups")
@@ -107,7 +107,7 @@ func (a AuthClient) SetupBlacklistCustomerGroup(companyID string) error {
 	return nil
 }
 
-func (a AuthClient) ShouldBlacklistEvent(event noona.Event) (bool, *noona.Customer, error) {
+func (a Client) ShouldBlacklistEvent(event noona.Event) (bool, *noona.Customer, error) {
 	if event.Unconfirmed == nil || !*event.Unconfirmed {
 		return false, nil, nil
 	}
@@ -151,7 +151,7 @@ func (a AuthClient) ShouldBlacklistEvent(event noona.Event) (bool, *noona.Custom
 	return false, nil, nil
 }
 
-func (a AuthClient) DenyEvent(event noona.Event, customer *noona.Customer) error {
+func (a Client) DenyEvent(event noona.Event, customer *noona.Customer) error {
 	_, err := a.Client.UpdateEventWithResponse(context.Background(), *event.Id, &noona.UpdateEventParams{}, noona.UpdateEventJSONRequestBody{
 		DeclinedAt: utils.TimePtr(time.Now()),
 	})
