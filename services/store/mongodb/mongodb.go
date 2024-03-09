@@ -4,10 +4,12 @@ import (
 	"context"
 	"time"
 
+	"github.com/chidiwilliams/flatbson"
 	"github.com/dchest/uniuri"
 	"github.com/noona-hq/blacklist/db"
 	"github.com/noona-hq/blacklist/services/store"
 	"github.com/noona-hq/blacklist/services/store/entity"
+	"github.com/pkg/errors"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -46,6 +48,30 @@ func (s Store) CreateBlacklistUser(user entity.User) error {
 	return nil
 }
 
+func (s Store) UpdateBlacklistUser(id string, user entity.User) (entity.User, error) {
+	blacklistCollection := s.db.DB.Collection(blacklistCollectionName)
+
+	user.UpdatedAt = time.Now()
+
+	filter := filter()
+
+	filter["_id"] = id
+
+	userUpdate, err := flatbson.Flatten(user)
+	if err != nil {
+		return entity.User{}, errors.Wrap(err, "Error flattening user")
+	}
+
+	update := bson.M{"$set": userUpdate}
+
+	_, err = blacklistCollection.UpdateOne(context.Background(), filter, update)
+	if err != nil {
+		return entity.User{}, err
+	}
+
+	return s.getBlacklistUser(id)
+}
+
 func (s Store) GetBlacklistUserForCompany(companyID string) (entity.User, error) {
 	blacklistCollection := s.db.DB.Collection(blacklistCollectionName)
 
@@ -58,6 +84,22 @@ func (s Store) GetBlacklistUserForCompany(companyID string) (entity.User, error)
 
 	var user entity.User
 	err := blacklistCollection.FindOne(context.Background(), filter, &options.FindOneOptions{Sort: sort}).Decode(&user)
+	if err != nil {
+		return entity.User{}, err
+	}
+
+	return user, nil
+}
+
+func (s Store) getBlacklistUser(id string) (entity.User, error) {
+	blacklistCollection := s.db.DB.Collection(blacklistCollectionName)
+
+	filter := filter()
+
+	filter["_id"] = id
+
+	var user entity.User
+	err := blacklistCollection.FindOne(context.Background(), filter).Decode(&user)
 	if err != nil {
 		return entity.User{}, err
 	}

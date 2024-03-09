@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/noona-hq/blacklist/logger"
+	"github.com/noona-hq/blacklist/services/store"
 	"github.com/noona-hq/blacklist/services/store/entity"
 	noona "github.com/noona-hq/noona-sdk-go"
 	"github.com/pkg/errors"
@@ -14,10 +15,11 @@ import (
 type Service struct {
 	cfg    Config
 	logger logger.Logger
+	store  store.Store
 }
 
-func New(cfg Config, logger logger.Logger) Service {
-	return Service{cfg, logger}
+func New(cfg Config, logger logger.Logger, store store.Store) Service {
+	return Service{cfg, logger, store}
 }
 
 func (s Service) NoAuthNoonaClient() (NoAuthClient, error) {
@@ -58,6 +60,13 @@ func (s Service) AuthNoonaClientFromBlacklistUser(blacklistUser entity.User) (Au
 		token, err := noAuthClient.RefreshTokenExchange(blacklistUser.Token.RefreshToken)
 		if err != nil {
 			return AuthClient{}, errors.Wrap(err, "Error refreshing token")
+		}
+
+		if _, err := s.store.UpdateBlacklistUser(blacklistUser.ID, entity.User{Token: entity.Token{
+			AccessToken:          *token.AccessToken,
+			AccessTokenExpiresAt: *token.ExpiresAt,
+		}}); err != nil {
+			s.logger.Errorw("Error updating blacklist user", "error", err)
 		}
 
 		return s.AuthNoonaClient(*token)

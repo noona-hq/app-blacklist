@@ -14,11 +14,12 @@ type Services struct {
 }
 
 func New(noonaCfg noona.Config, logger logger.Logger, store store.Store) Services {
-	noonaService := noona.New(noonaCfg, logger)
+	noonaService := noona.New(noonaCfg, logger, store)
 
 	return Services{
-		core:  core.New(logger, noonaService, store),
-		noona: noonaService,
+		logger: logger,
+		core:   core.New(logger, noonaService, store),
+		noona:  noonaService,
 	}
 }
 
