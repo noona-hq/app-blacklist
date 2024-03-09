@@ -1,7 +1,6 @@
 package server
 
 import (
-	"log"
 	"net/http"
 
 	"github.com/noona-hq/blacklist/db"
@@ -52,7 +51,7 @@ func (s *Server) Serve() error {
 	router := s.NewRouter()
 	router.Renderer = templates.NewRenderer(s.logger)
 
-	log.Println("Starting Blacklist server...")
+	s.logger.Info("Server started on :8080")
 	return http.ListenAndServe(":8080", router)
 }
 

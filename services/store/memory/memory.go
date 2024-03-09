@@ -41,6 +41,28 @@ func (s *inMemoryStore) CreateBlacklistUser(user entity.User) error {
 	return nil
 }
 
+func (s *inMemoryStore) UpdateBlacklistUser(id string, user entity.User) (entity.User, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	user.UpdatedAt = time.Now()
+
+	users, exists := s.blacklistUsers[user.CompanyID]
+	if !exists {
+		return entity.User{}, errors.New("user not found")
+	}
+
+	for i, u := range users {
+		if u.ID == id {
+			users[i] = user
+			s.blacklistUsers[user.CompanyID] = users
+			return user, nil
+		}
+	}
+
+	return entity.User{}, errors.New("user not found")
+}
+
 // GetBlacklistUserForCompany retrieves the latest user for a given company ID from the in-memory store.
 func (s *inMemoryStore) GetBlacklistUserForCompany(companyID string) (entity.User, error) {
 	s.mu.RLock()
