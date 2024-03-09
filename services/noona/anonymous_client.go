@@ -8,12 +8,12 @@ import (
 	"github.com/pkg/errors"
 )
 
-type NoAuthClient struct {
+type AnonymousClient struct {
 	cfg    Config
 	Client *noona.ClientWithResponses
 }
 
-func (n NoAuthClient) CodeTokenExchange(code string) (*noona.OAuthToken, error) {
+func (n AnonymousClient) CodeTokenExchange(code string) (*noona.OAuthToken, error) {
 	tokenResponse, err := n.Client.GetOAuthTokenWithResponse(context.Background(), &noona.GetOAuthTokenParams{
 		ClientId:     n.cfg.ClientID,
 		ClientSecret: n.cfg.ClientSecret,
@@ -32,7 +32,7 @@ func (n NoAuthClient) CodeTokenExchange(code string) (*noona.OAuthToken, error) 
 	return tokenResponse.JSON200, nil
 }
 
-func (n NoAuthClient) RefreshTokenExchange(refreshToken string) (*noona.OAuthToken, error) {
+func (n AnonymousClient) RefreshTokenExchange(refreshToken string) (*noona.OAuthToken, error) {
 	tokenResponse, err := n.Client.GetOAuthTokenWithResponse(context.Background(), &noona.GetOAuthTokenParams{
 		ClientId:     n.cfg.ClientID,
 		ClientSecret: n.cfg.ClientSecret,

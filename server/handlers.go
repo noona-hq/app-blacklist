@@ -23,9 +23,9 @@ func (s Server) OAuthCallbackHandler(ctx echo.Context) error {
 		return ctx.Render(http.StatusOK, "success.html", data)
 	}
 
-	user, err := s.services.Core().OnboardUserToBlacklist(code)
+	user, err := s.services.Core().OnboardUser(code)
 	if err != nil {
-		s.logger.Errorw("Error onboarding user to blacklist", "error", err)
+		s.logger.Errorw("Error onboarding user to app", "error", err)
 		return ctx.String(http.StatusInternalServerError, "Something went wrong. Please try again.")
 	}
 

@@ -7,9 +7,9 @@ import (
 	"github.com/noona-hq/blacklist/logger"
 	"github.com/noona-hq/blacklist/server/templates"
 	"github.com/noona-hq/blacklist/services"
-	"github.com/noona-hq/blacklist/services/store"
-	"github.com/noona-hq/blacklist/services/store/memory"
-	"github.com/noona-hq/blacklist/services/store/mongodb"
+	"github.com/noona-hq/blacklist/store"
+	"github.com/noona-hq/blacklist/store/memory"
+	"github.com/noona-hq/blacklist/store/mongodb"
 	"github.com/pkg/errors"
 )
 
@@ -42,7 +42,10 @@ func New(config Config, logger logger.Logger) (Server, error) {
 		}
 	}
 
-	server.services = services.New(config.Noona, logger, store)
+	server.services, err = services.New(config.Noona, logger, store)
+	if err != nil {
+		return Server{}, errors.Wrap(err, "unable to create services")
+	}
 
 	return server, nil
 }

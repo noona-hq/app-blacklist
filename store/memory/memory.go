@@ -6,24 +6,24 @@ import (
 	"time"
 
 	"github.com/dchest/uniuri"
-	"github.com/noona-hq/blacklist/services/store"
-	"github.com/noona-hq/blacklist/services/store/entity"
+	"github.com/noona-hq/blacklist/store"
+	"github.com/noona-hq/blacklist/store/entity"
 )
 
 type inMemoryStore struct {
-	blacklistUsers map[string][]entity.User // Keyed by companyID
-	mu             sync.RWMutex
+	users map[string][]entity.User // Keyed by companyID
+	mu    sync.RWMutex
 }
 
 // NewStore creates a new in-memory store.
 func NewStore() store.Store {
 	return &inMemoryStore{
-		blacklistUsers: make(map[string][]entity.User),
+		users: make(map[string][]entity.User),
 	}
 }
 
-// CreateBlacklistUser adds a new user to the in-memory store.
-func (s *inMemoryStore) CreateBlacklistUser(user entity.User) error {
+// CreateUser adds a new user to the in-memory store.
+func (s *inMemoryStore) CreateUser(user entity.User) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -36,18 +36,18 @@ func (s *inMemoryStore) CreateBlacklistUser(user entity.User) error {
 	user.UpdatedAt = now
 
 	// Append the user to the slice associated with the company ID.
-	s.blacklistUsers[user.CompanyID] = append(s.blacklistUsers[user.CompanyID], user)
+	s.users[user.CompanyID] = append(s.users[user.CompanyID], user)
 
 	return nil
 }
 
-func (s *inMemoryStore) UpdateBlacklistUser(id string, user entity.User) (entity.User, error) {
+func (s *inMemoryStore) UpdateUser(id string, user entity.User) (entity.User, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
 	user.UpdatedAt = time.Now()
 
-	users, exists := s.blacklistUsers[user.CompanyID]
+	users, exists := s.users[user.CompanyID]
 	if !exists {
 		return entity.User{}, errors.New("user not found")
 	}
@@ -55,7 +55,7 @@ func (s *inMemoryStore) UpdateBlacklistUser(id string, user entity.User) (entity
 	for i, u := range users {
 		if u.ID == id {
 			users[i] = user
-			s.blacklistUsers[user.CompanyID] = users
+			s.users[user.CompanyID] = users
 			return user, nil
 		}
 	}
@@ -63,12 +63,12 @@ func (s *inMemoryStore) UpdateBlacklistUser(id string, user entity.User) (entity
 	return entity.User{}, errors.New("user not found")
 }
 
-// GetBlacklistUserForCompany retrieves the latest user for a given company ID from the in-memory store.
-func (s *inMemoryStore) GetBlacklistUserForCompany(companyID string) (entity.User, error) {
+// GetUserForCompany retrieves the latest user for a given company ID from the in-memory store.
+func (s *inMemoryStore) GetUserForCompany(companyID string) (entity.User, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
-	users, exists := s.blacklistUsers[companyID]
+	users, exists := s.users[companyID]
 	if !exists || len(users) == 0 {
 		return entity.User{}, errors.New("user not found")
 	}
