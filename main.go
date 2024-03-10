@@ -3,9 +3,9 @@ package main
 import (
 	"log"
 
-	"github.com/noona-hq/blacklist/config"
-	"github.com/noona-hq/blacklist/logger"
-	"github.com/noona-hq/blacklist/server"
+	"github.com/noona-hq/app-blacklist/config"
+	"github.com/noona-hq/app-blacklist/logger"
+	"github.com/noona-hq/app-blacklist/server"
 )
 
 func main() {

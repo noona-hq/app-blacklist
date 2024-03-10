@@ -6,9 +6,9 @@ import (
 
 	"github.com/chidiwilliams/flatbson"
 	"github.com/dchest/uniuri"
-	"github.com/noona-hq/blacklist/db"
-	"github.com/noona-hq/blacklist/store"
-	"github.com/noona-hq/blacklist/store/entity"
+	"github.com/noona-hq/app-blacklist/db"
+	"github.com/noona-hq/app-blacklist/store"
+	"github.com/noona-hq/app-blacklist/store/entity"
 	"github.com/pkg/errors"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo/options"

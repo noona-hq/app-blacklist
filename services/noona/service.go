@@ -1,8 +1,8 @@
 package noona
 
 import (
-	"github.com/noona-hq/blacklist/logger"
-	"github.com/noona-hq/blacklist/store"
+	"github.com/noona-hq/app-blacklist/logger"
+	"github.com/noona-hq/app-blacklist/store"
 	noona "github.com/noona-hq/noona-sdk-go"
 	"github.com/pkg/errors"
 )

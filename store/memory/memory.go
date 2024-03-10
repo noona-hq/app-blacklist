@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/dchest/uniuri"
-	"github.com/noona-hq/blacklist/store"
-	"github.com/noona-hq/blacklist/store/entity"
+	"github.com/noona-hq/app-blacklist/store"
+	"github.com/noona-hq/app-blacklist/store/entity"
 )
 
 type inMemoryStore struct {

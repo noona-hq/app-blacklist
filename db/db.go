@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/noona-hq/blacklist/logger"
+	"github.com/noona-hq/app-blacklist/logger"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"

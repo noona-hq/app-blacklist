@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/noona-hq/blacklist/utils"
+	"github.com/noona-hq/app-blacklist/utils"
 	noona "github.com/noona-hq/noona-sdk-go"
 	"github.com/pkg/errors"
 )
