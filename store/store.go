@@ -1,6 +1,6 @@
 package store
 
-import "github.com/noona-hq/blacklist/store/entity"
+import "github.com/noona-hq/app-blacklist/store/entity"
 
 type Store interface {
 	CreateUser(user entity.User) error

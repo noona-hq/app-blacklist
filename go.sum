@@ -165,10 +165,6 @@ github.com/montanaflynn/stats v0.0.0-20171201202039-1bf9dbcd8cbe h1:iruDEfMl2E6f
 github.com/montanaflynn/stats v0.0.0-20171201202039-1bf9dbcd8cbe/go.mod h1:wL8QJuTMNUDYhXwkmfOly8iTdp5TEcJFWZD2D7SIkUc=
 github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e h1:fD57ERR4JtEqsWbfPhv4DMiApHyliiK5xCTNVSPiaAs=
 github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e/go.mod h1:zD1mROLANZcx1PVRCS0qkT7pwLkGfwJo4zjcN/Tysno=
-github.com/noona-hq/noona-sdk-go v0.0.0-20240307141345-db190b831a16 h1:dycnpnf14/4ixcbyxI6oSTx768rq3xlUc4nDfuag3Go=
-github.com/noona-hq/noona-sdk-go v0.0.0-20240307141345-db190b831a16/go.mod h1:SxawH93K9w4acLO3HDBzpvIAbJJ4ytMathFhvD3EHzI=
-github.com/noona-hq/noona-sdk-go v0.0.0-20240308224549-fbc9b7f97fbc h1:xH5FRFQUQGfA7oWYKdaqW4T7X8LIsDaATpoD8Fbq6wo=
-github.com/noona-hq/noona-sdk-go v0.0.0-20240308224549-fbc9b7f97fbc/go.mod h1:SxawH93K9w4acLO3HDBzpvIAbJJ4ytMathFhvD3EHzI=
 github.com/noona-hq/noona-sdk-go v0.0.0-20240309134956-70d1a175bd30 h1:9jPnpVrJTfKv/Gu8fce4OB4Gb1KwL2ueu05fUw9ns8I=
 github.com/noona-hq/noona-sdk-go v0.0.0-20240309134956-70d1a175bd30/go.mod h1:SxawH93K9w4acLO3HDBzpvIAbJJ4ytMathFhvD3EHzI=
 github.com/pelletier/go-toml v1.4.0/go.mod h1:PN7xzY2wHTK0K9p34ErDQMlFxa51Fk0OUruD3k1mMwo=

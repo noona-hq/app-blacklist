@@ -1,4 +1,4 @@
-module github.com/noona-hq/blacklist
+module github.com/noona-hq/app-blacklist
 
 go 1.20
 

@@ -3,13 +3,13 @@ package server
 import (
 	"net/http"
 
-	"github.com/noona-hq/blacklist/db"
-	"github.com/noona-hq/blacklist/logger"
-	"github.com/noona-hq/blacklist/server/templates"
-	"github.com/noona-hq/blacklist/services"
-	"github.com/noona-hq/blacklist/store"
-	"github.com/noona-hq/blacklist/store/memory"
-	"github.com/noona-hq/blacklist/store/mongodb"
+	"github.com/noona-hq/app-blacklist/db"
+	"github.com/noona-hq/app-blacklist/logger"
+	"github.com/noona-hq/app-blacklist/server/templates"
+	"github.com/noona-hq/app-blacklist/services"
+	"github.com/noona-hq/app-blacklist/store"
+	"github.com/noona-hq/app-blacklist/store/memory"
+	"github.com/noona-hq/app-blacklist/store/mongodb"
 	"github.com/pkg/errors"
 )
 

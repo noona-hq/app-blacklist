@@ -1,10 +1,10 @@
 package services
 
 import (
-	"github.com/noona-hq/blacklist/logger"
-	"github.com/noona-hq/blacklist/services/core"
-	"github.com/noona-hq/blacklist/services/noona"
-	"github.com/noona-hq/blacklist/store"
+	"github.com/noona-hq/app-blacklist/logger"
+	"github.com/noona-hq/app-blacklist/services/core"
+	"github.com/noona-hq/app-blacklist/services/noona"
+	"github.com/noona-hq/app-blacklist/store"
 	"github.com/pkg/errors"
 )
 

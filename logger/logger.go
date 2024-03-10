@@ -1,7 +1,7 @@
 package logger
 
 import (
-	"github.com/noona-hq/blacklist/config"
+	"github.com/noona-hq/app-blacklist/config"
 	"go.uber.org/zap"
 )
 

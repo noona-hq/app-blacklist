@@ -5,7 +5,7 @@ import (
 	"io"
 
 	"github.com/labstack/echo/v4"
-	"github.com/noona-hq/blacklist/logger"
+	"github.com/noona-hq/app-blacklist/logger"
 )
 
 func NewRenderer(l logger.Logger) *TemplateRenderer {
