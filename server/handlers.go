@@ -7,31 +7,79 @@ import (
 	noona "github.com/noona-hq/noona-sdk-go"
 )
 
+const (
+	OpenAction      = "open"
+	UninstallAction = "uninstall"
+)
+
 type SuccessScreenData struct {
 	AppStoreURL string
 	CompanyName string
 }
 
 func (s Server) OAuthCallbackHandler(ctx echo.Context) error {
-	data := SuccessScreenData{
-		AppStoreURL: s.config.Noona.AppStoreURL,
-		CompanyName: "company",
-	}
-
 	code := ctx.QueryParam("code")
-	if code == "" {
-		return ctx.Render(http.StatusOK, "success.html", data)
+	if code != "" {
+		return s.onboardUser(ctx, code)
 	}
 
+	IDToken := ctx.QueryParam("id_token")
+	if IDToken == "" {
+		return ctx.Render(http.StatusOK, "success.html", SuccessScreenData{
+			AppStoreURL: s.config.Noona.AppStoreURL,
+			CompanyName: "company",
+		})
+	}
+
+	action := OpenAction
+	if ctx.QueryParam("action") != "" {
+		action = ctx.QueryParam("action")
+	}
+
+	if action == UninstallAction {
+		return s.uninstallApp(ctx, IDToken)
+	}
+
+	return s.showAppDescription(ctx, IDToken)
+}
+
+func (s Server) onboardUser(ctx echo.Context, code string) error {
 	user, err := s.services.Core().OnboardUser(code)
 	if err != nil {
 		s.logger.Errorw("Error onboarding user to app", "error", err)
 		return ctx.String(http.StatusInternalServerError, "Something went wrong. Please try again.")
 	}
 
-	data.CompanyName = getCompanyNameFromUser(user)
+	data := SuccessScreenData{
+		AppStoreURL: s.config.Noona.AppStoreURL,
+		CompanyName: getCompanyNameFromUser(user),
+	}
 
 	return ctx.Render(http.StatusOK, "success.html", data)
+}
+
+func (s Server) showAppDescription(ctx echo.Context, IDToken string) error {
+	user, err := s.services.Core().GetUserFromIDToken(IDToken)
+	if err != nil {
+		s.logger.Errorw("Error getting user from ID token", "error", err)
+		return ctx.String(http.StatusInternalServerError, "Something went wrong. Please try again.")
+	}
+
+	data := SuccessScreenData{
+		AppStoreURL: s.config.Noona.AppStoreURL,
+		CompanyName: getCompanyNameFromUser(user),
+	}
+
+	return ctx.Render(http.StatusOK, "success.html", data)
+}
+
+func (s Server) uninstallApp(ctx echo.Context, IDToken string) error {
+	if err := s.services.Core().UninstallApp(IDToken); err != nil {
+		s.logger.Errorw("Error uninstalling app for user", "error", err)
+		return ctx.String(http.StatusInternalServerError, "Something went wrong. Please try again.")
+	}
+
+	return ctx.String(http.StatusOK, "App uninstalled")
 }
 
 func (s Server) WebhookHandler(ctx echo.Context) error {

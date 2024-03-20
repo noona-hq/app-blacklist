@@ -14,7 +14,7 @@ type Service struct {
 }
 
 func New(cfg Config, logger logger.Logger, store store.Store) Service {
-	return Service{cfg, logger, store}
+	return Service{cfg: cfg, logger: logger, store: store}
 }
 
 func (s Service) AnonymousClient() (AnonymousClient, error) {
@@ -41,4 +41,8 @@ func (s Service) Client(token noona.OAuthToken) (Client, error) {
 	}
 
 	return Client{Client: client, cfg: s.cfg}, nil
+}
+
+func (s Service) ClientID() string {
+	return s.cfg.ClientID
 }
