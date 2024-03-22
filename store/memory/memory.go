@@ -79,6 +79,23 @@ func (s *inMemoryStore) GetUserForCompany(companyID string) (entity.User, error)
 	return latestUser, nil
 }
 
+func (s *inMemoryStore) DeleteUser(id string) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	for companyID, users := range s.users {
+		for i, user := range users {
+			if user.ID == id {
+				// Remove the user from the slice.
+				s.users[companyID] = append(users[:i], users[i+1:]...)
+				return nil
+			}
+		}
+	}
+
+	return errors.New("user not found")
+}
+
 func randomID() string {
 	return uniuri.NewLen(24)
 }

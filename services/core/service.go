@@ -1,8 +1,14 @@
 package core
 
 import (
+	"context"
+	"crypto/rsa"
+	"encoding/base64"
+	"fmt"
+	"math/big"
 	"time"
 
+	"github.com/golang-jwt/jwt"
 	"github.com/noona-hq/app-blacklist/logger"
 	"github.com/noona-hq/app-blacklist/services/noona"
 	"github.com/noona-hq/app-blacklist/store"
@@ -71,6 +77,41 @@ func (s Service) scaffoldNoonaResourcesForApp(client noona.Client, companyID str
 	if err := client.SetupBlacklistCustomerGroup(companyID); err != nil {
 		return errors.Wrap(err, "error setting up blacklist customer group")
 	}
+
+	return nil
+}
+
+func (s Service) GetUserFromIDToken(IDToken string) (*noonasdk.User, error) {
+	user, err := s.getUserFromIDToken(IDToken)
+	if err != nil {
+		return nil, errors.Wrap(err, "error getting user for company")
+	}
+
+	s.logger.Infow("User authenticated from ID token", "company_id", user.CompanyID, "email", user.Email)
+
+	oAuthToken, err := s.getOAuthTokenFromUser(user)
+	if err != nil {
+		return nil, errors.Wrap(err, "error getting OAuth token from user")
+	}
+
+	authClient, err := s.noona.Client(oAuthToken)
+	if err != nil {
+		return nil, errors.Wrap(err, "error getting noona client")
+	}
+
+	return authClient.GetUser()
+}
+
+func (s Service) UninstallApp(IDToken string) error {
+	user, err := s.getUserFromIDToken(IDToken)
+	if err != nil {
+		// Idempotent operation, so we don't need to return an error
+		return nil
+	}
+
+	s.store.DeleteUser(user.ID)
+
+	s.logger.Infow("App uninstalled", "company_id", user.CompanyID, "email", user.Email)
 
 	return nil
 }
@@ -189,4 +230,98 @@ func (s Service) getOAuthTokenFromUser(user entity.User) (noonasdk.OAuthToken, e
 	}
 
 	return oAuthToken, nil
+}
+
+func (s Service) getUserFromIDToken(IDToken string) (entity.User, error) {
+	c, err := s.noona.AnonymousClient()
+	if err != nil {
+		return entity.User{}, errors.Wrap(err, "error creating anonymous client")
+	}
+
+	resp, err := c.Client.GetOAuthPublicKeyWithResponse(context.Background(), &noonasdk.GetOAuthPublicKeyParams{})
+	if err != nil {
+		return entity.User{}, errors.Wrap(err, "error getting public key")
+	}
+
+	if resp.JSON200 == nil {
+		return entity.User{}, errors.New("error getting public key")
+	}
+
+	publicKey, err := jwkToPublicKey(resp.JSON200)
+	if err != nil {
+		return entity.User{}, errors.Wrap(err, "error converting JWK to public key")
+	}
+
+	token, err := jwt.Parse(IDToken, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodRSA); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+
+		return publicKey, nil
+	})
+	if err != nil {
+		return entity.User{}, errors.Wrap(err, "error parsing token")
+	}
+
+	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+		companyID, ok := claims["company_id"].(string)
+		if !ok {
+			return entity.User{}, errors.New("error parsing token, company_id not found")
+		}
+
+		// Validate that this token was indeed issued for our app
+		aud, ok := claims["aud"].(string)
+		if !ok {
+			return entity.User{}, errors.New("error parsing token, aud not found")
+		}
+
+		if aud != s.noona.ClientID() {
+			return entity.User{}, errors.New("error parsing token, aud does not match client_id")
+		}
+
+		// Validate that this token has not expired
+		exp, ok := claims["exp"].(float64)
+		if !ok {
+			return entity.User{}, errors.New("error parsing token, exp not found")
+		}
+
+		if int64(exp) < time.Now().Unix() {
+			return entity.User{}, errors.New("error parsing token, token expired")
+		}
+
+		iss, ok := claims["iss"].(string)
+		if !ok {
+			return entity.User{}, errors.New("error parsing token, iss not found")
+		}
+
+		// Validate that Noona issued this token
+		if iss != "api.noona.is" {
+			return entity.User{}, errors.New("error parsing token, iss does not match expected value")
+		}
+
+		return s.store.GetUserForCompany(companyID)
+	}
+
+	return entity.User{}, errors.New("error parsing token")
+}
+
+func jwkToPublicKey(jwk *noonasdk.OAuthPublicKey) (*rsa.PublicKey, error) {
+	// Decode the base64 URL encoded modulus (n)
+	nb, err := base64.RawURLEncoding.DecodeString(jwk.N)
+	if err != nil {
+		return nil, err
+	}
+
+	n := new(big.Int).SetBytes(nb)
+
+	// Decode the base64 URL encoded exponent (e)
+	eb, err := base64.RawURLEncoding.DecodeString(jwk.E)
+	if err != nil {
+		return nil, err
+	}
+
+	// The exponent is usually small enough to fit into an int
+	e := int(new(big.Int).SetBytes(eb).Uint64())
+
+	return &rsa.PublicKey{N: n, E: e}, nil
 }

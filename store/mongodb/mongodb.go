@@ -91,6 +91,23 @@ func (s Store) GetUserForCompany(companyID string) (entity.User, error) {
 	return user, nil
 }
 
+func (s Store) DeleteUser(id string) error {
+	usersCollection := s.db.DB.Collection(usersCollectionName)
+
+	filter := filter()
+
+	filter["_id"] = id
+
+	update := bson.M{"$set": bson.M{"deletedAt": time.Now()}}
+
+	_, err := usersCollection.UpdateOne(context.Background(), filter, update)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (s Store) getUser(id string) (entity.User, error) {
 	usersCollection := s.db.DB.Collection(usersCollectionName)
 
