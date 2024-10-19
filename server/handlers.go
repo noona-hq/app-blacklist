@@ -44,18 +44,13 @@ func (s Server) OAuthCallbackHandler(ctx echo.Context) error {
 }
 
 func (s Server) onboardUser(ctx echo.Context, code string) error {
-	user, err := s.services.Core().OnboardUser(code)
+	_, err := s.services.Core().OnboardUser(code)
 	if err != nil {
 		s.logger.Errorw("Error onboarding user to app", "error", err)
 		return ctx.String(http.StatusInternalServerError, "Something went wrong. Please try again.")
 	}
 
-	data := SuccessScreenData{
-		AppStoreURL: s.config.Noona.AppStoreURL,
-		CompanyName: getCompanyNameFromUser(user),
-	}
-
-	return ctx.Render(http.StatusOK, "success.html", data)
+	return ctx.Redirect(http.StatusTemporaryRedirect, s.config.Noona.AppStoreURL)
 }
 
 func (s Server) showAppDescription(ctx echo.Context, IDToken string) error {
