@@ -1,6 +1,6 @@
 module github.com/noona-hq/app-blacklist
 
-go 1.23.0
+go 1.25.5
 
 require (
 	github.com/chidiwilliams/flatbson v0.3.0

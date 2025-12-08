@@ -1,4 +1,4 @@
-FROM golang:1.20 AS build
+FROM golang:1.25.5 AS build
 
 WORKDIR /build
 ENV CGO_ENABLED=0
@@ -11,7 +11,6 @@ RUN go mod download
 COPY . .
 
 RUN make install
-
 
 FROM alpine:latest
 COPY --from=build /go/bin/app-blacklist ./
