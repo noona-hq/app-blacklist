@@ -152,7 +152,11 @@ func (a Client) ShouldBlacklistEvent(event noona.Event) (bool, *noona.Customer, 
 }
 
 func (a Client) DenyEvent(event noona.Event, customer *noona.Customer) error {
-	_, err := a.Client.UpdateEventWithResponse(context.Background(), *event.Id, &noona.UpdateEventParams{}, noona.UpdateEventJSONRequestBody{
+	_, err := a.Client.UpdateEventWithResponse(context.Background(), *event.Id, &noona.UpdateEventParams{
+		Behavior: &noona.EventUpdateBehavior{
+			Notify: utils.BoolPtr(true),
+		},
+	}, noona.UpdateEventJSONRequestBody{
 		DeclinedAt: utils.TimePtr(time.Now()),
 	})
 	if err != nil {
