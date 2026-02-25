@@ -1,28 +1,44 @@
-![Example Image](blacklist.webp)
+# app-blacklist
 
-# Blacklist App
+Noona app that automatically declines marketplace bookings from customers in a Blacklist customer group.
 
-Noona HQ example app that adds blacklisting functionality.
+## Tech Stack
 
-## How it works
+- Go
+- `labstack/echo/v4` - HTTP server
+- `noona-hq/noona-sdk-go` - Noona platform SDK (OAuth, webhooks, customer groups)
+- `go.mongodb.org/mongo-driver` - MongoDB for user/token storage
+- `go.uber.org/zap` - structured logging
+- `golang-jwt/jwt` - ID token verification
+- Deployed via Helm / Docker
 
-### Setup phase
+## Architecture / How it works
 
-1. User installs app
-2. App creates a customer group called **Blacklist**
-3. App creates a webhook to track appointment (event) creation
+Standard Noona app pattern - OAuth-based install flow + webhook consumer.
 
-### Daily workings
+**Install flow:**
+1. Merchant installs via Noona App Store -> OAuth redirect to `/oauth/callback?code=...`
+2. App exchanges code for token, fetches user, scaffolds Noona resources:
+   - Creates a **Blacklist** customer group
+   - Registers an **event creation webhook**
+3. Stores user with OAuth tokens in MongoDB
 
-The app examines all appointments (events) that are created. If an event satisfies the following:
+**Webhook flow:**
+- `POST /webhook` receives event creation callbacks from Noona
+- Checks if the event was created via marketplace and if the attached customer is in the Blacklist customer group
+- If both conditions met, automatically declines the appointment
 
-- Appointment is created through marketplace
-- Attached customer is in **Blacklist** customer groups
+**Uninstall:** `GET /oauth/callback?action=uninstall&id_token=...`
 
-the appointment is automatically declined.
+## Key interfaces / API
 
-### Use case
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/oauth/callback` | OAuth install/uninstall handler |
+| POST | `/webhook` | Noona event creation webhook receiver |
+| GET | `/health` | Health check |
 
-Users sometimes encounter individuals that could be labelled a "Bad Client". They frequently don't show up, they don't pay, spam appointment requests without intending to ever show up etc.
+## Dependencies
 
-The user can now simply add this customer to the **Blacklist** customer group and they will be freed from future nuisance.
+- **Noona API** - customer groups, webhook registration, event management (via `noona-sdk-go`)
+- MongoDB - user and token storage
