@@ -3,7 +3,7 @@ enabled: true
 
 deployment:
   image:
-    repository: gcr.io/timatal1-198022/app-blacklist
+    repository: ghcr.io/noona-hq/app-blacklist
     tag: latest
   replicaCount: 1
   resources:

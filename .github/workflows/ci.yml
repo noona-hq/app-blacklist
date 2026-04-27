@@ -1,0 +1,24 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - dev
+      - main
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  publish:
+    name: Publish
+    if: github.event_name == 'push' && (github.ref_name == 'dev' || github.ref_name == 'main')
+    uses: noona-hq/noona-workflows/.github/workflows/docker-helm-service.yml@main
+    with:
+      mode: ${{ github.ref_name == 'main' && 'PROD' || '' }}
+      image-name: ghcr.io/${{ github.repository }}
+      chart-name: app-blacklist
+    secrets:
+      github-token: ${{ secrets.GITHUB_TOKEN }}
+      noona-deployment-token: ${{ secrets.NOONA_DEPLOYMENT_GITHUB_TOKEN }}
