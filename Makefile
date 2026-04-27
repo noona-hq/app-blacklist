@@ -1,5 +1,3 @@
-NAME   := gcr.io/timatal1-198022/app-blacklist
-
 GOBIN ?= $(shell go env GOBIN)
 
 GO_ARGS=-trimpath
@@ -18,25 +16,3 @@ build: ## Build project
 .PHONY: install
 install: ## Install on local system
 	go install ${GO_ARGS} ./...
-
-##############
-# CI targets #
-##############
-
-CI_IMG_VERSION 	 := $(shell ./.circleci/scripts/image_version.sh)
-CI_CHART_VERSION := $(shell ./.circleci/scripts/chart_version.sh)
-
-ci-build-image:
-	./.circleci/scripts/image_build.sh ${NAME}
-
-ci-push-image:
-	./.circleci/scripts/image_push.sh ${NAME}
-
-ci-build-chart:
-	./.circleci/scripts/chart_build.sh ${CI_CHART_VERSION} ${CI_IMG_VERSION}
-
-ci-push-chart:
-	./.circleci/scripts/chart_push.sh ${CI_CHART_VERSION} ${CI_IMG_VERSION}
-
-ci-noona-sync:
-	./.circleci/scripts/trigger_noona_sync.sh
